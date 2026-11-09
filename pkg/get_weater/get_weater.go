@@ -22,6 +22,8 @@ func GetWeather(city, unit string) string {
 		unit = "celsius"
 	}
 
+	fmt.Println("调用外部天气 API，获取城市：", city, "单位：", unit)
+
 	// 1. 请求外部天气 API
 	apiURL := fmt.Sprintf(
 		"https://api.weather.example.com/v1/current?city=%s&unit=%s",
