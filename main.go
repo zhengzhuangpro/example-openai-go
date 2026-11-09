@@ -46,7 +46,14 @@ func main() {
 	// fmt.Println(resp)
 
 	// 流式响应
-	resp, err := client.CreateChatCompletionStreamRequest()
+	// resp, err := client.CreateChatCompletionStreamRequest()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(resp)
+
+	// Tool Calling
+	resp, err := client.CreateChatCompletionToolRequest()
 	if err != nil {
 		panic(err)
 	}

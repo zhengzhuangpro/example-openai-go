@@ -2,11 +2,13 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 
+	getweater "github.com/example-openai-go/pkg/get_weater"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/conversations"
 	"github.com/openai/openai-go/v3/option"
@@ -151,6 +153,69 @@ func (c *NewClient) CreateChatCompletionStreamRequest() (*responses.Response, er
 
 	for stream.Next() {
 		fmt.Print(stream.Current().Delta) // 文本增量 内容
+	}
+
+	return nil, nil
+}
+
+// Tool Calling
+func (c *NewClient) CreateChatCompletionToolRequest() (*responses.Response, error) {
+	tools := []openai.ChatCompletionToolUnionParam{
+		openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
+			Name:        "get_weather",
+			Description: openai.String("获取指定城市的天气信息"),
+			Parameters: openai.FunctionParameters{
+				"type": "object",
+				"properties": map[string]any{
+					"city": map[string]any{
+						"type": "string",
+					},
+				},
+				"required": []string{"city"},
+			},
+		}),
+	}
+
+	history := []openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage("北京天气怎么样？"),
+	}
+
+	// 第一次请求：模型决定调用哪个工具
+	resp, err := c.client.Chat.Completions.New(c.ctx, openai.ChatCompletionNewParams{
+		Model:    c.model,
+		Tools:    tools,
+		Messages: history,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	msg := resp.Choices[0].Message
+
+	// 本地调用工具
+	if len(msg.ToolCalls) > 0 {
+		toolCall := msg.ToolCalls[0]
+
+		var args struct {
+			City string `json:"city"`
+		}
+
+		_ = json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+
+		result := getweater.GetWeather(args.City, "celsius")
+
+		// 把模型
+		resp, err = c.client.Chat.Completions.New(c.ctx, openai.ChatCompletionNewParams{
+			Model: c.model,
+			Tools: tools,
+			Messages: append(history,
+				msg.ToParam(),
+				openai.ToolMessage(result, toolCall.ID),
+			),
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return nil, nil
