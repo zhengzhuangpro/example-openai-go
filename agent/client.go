@@ -45,7 +45,7 @@ func NewClient() *Client {
 //
 // 学什么：
 //   - DeepSeek 等兼容端点只覆盖 Chat 等核心 API，
-//     Embeddings、Vision、Audio 等官方专属能力需要官方 key
+//     Embeddings、Audio 等官方专属能力需要官方 key
 //   - 官方模型名 SDK 内置了常量（如 ChatModelGPT4oMini），
 //     不用像 DeepSeek 那样手写字符串
 //   - 一个程序里可以同时持有多个 Client，各连各的端点

@@ -41,7 +41,7 @@ func main() {
 		err = client.ChatReasoner(ctx)
 	case "embeddings": // 语义搜索：向量化 + 余弦相似度（需官方端点）
 		err = client.SearchEmbeddings(ctx)
-	case "vision": // 图片理解：多模态 content parts（需官方端点）
+	case "vision": // 图片理解：多模态 content parts（DeepSeek 视觉模型）
 		err = client.ChatVision(ctx)
 	case "schema": // JSON Schema：约束模型输出结构化数据
 		err = client.ChatJSONSchema(ctx)
@@ -74,11 +74,11 @@ func usage() {
   tools          多工具路由：注册表 + 并行调用分发，Agent 雏形
   reasoner       推理模型：deepseek-reasoner 思维链 vs 普通模型
   embeddings     语义搜索：向量化 + 余弦相似度（需官方 OPENAI_API_KEY）
-  vision         图片理解：多模态 content parts（需官方 OPENAI_API_KEY）
+  vision         图片理解：多模态 content parts（deepseek-v4-flash-vision-exp）
   schema         JSON Schema：约束模型输出结构化数据
 
 环境变量:
   DEEPSEEK_API_KEY  DeepSeek API Key（DeepSeek 示例必须）
   BAIDU_MAP_AK      百度地图 AK（tool/tools 子命令需要）
-  OPENAI_API_KEY    OpenAI 官方 Key（embeddings/vision/conversations 需要）`)
+  OPENAI_API_KEY    OpenAI 官方 Key（embeddings/conversations 需要）`)
 }

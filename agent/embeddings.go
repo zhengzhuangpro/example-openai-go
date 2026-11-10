@@ -37,7 +37,7 @@ func (c *Client) SearchEmbeddings(ctx context.Context) error {
 	// 知识库 + 查询一次性批量向量化（最后一条是查询本身）
 	inputs := append(docs, query)
 	resp, err := client.client.Embeddings.New(ctx, openai.EmbeddingNewParams{
-		Model: openai.EmbeddingModelTextEmbedding3Small,
+		Model: openai.EmbeddingModelTextEmbedding3Small, // deepseek没有向量模型
 		Input: openai.EmbeddingNewParamsInputUnion{
 			OfArrayOfStrings: inputs,
 		},
