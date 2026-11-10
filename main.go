@@ -45,6 +45,12 @@ func main() {
 		err = client.ChatVision(ctx)
 	case "schema": // JSON Schema：约束模型输出结构化数据
 		err = client.ChatJSONSchema(ctx)
+	case "errors": // 错误处理：API 错误 vs 网络错误，状态码与详情
+		err = client.ChatErrors(ctx)
+	case "params": // 参数与用量：temperature 对比 + token 统计
+		err = client.ChatParams(ctx)
+	case "responses-tool": // Responses API 版工具调用，与 Chat Completions 对照
+		err = client.ChatResponsesTool(ctx)
 	case "help", "-h", "--help":
 		usage()
 		return
@@ -76,6 +82,9 @@ func usage() {
   embeddings     语义搜索：向量化 + 余弦相似度（需官方 OPENAI_API_KEY）
   vision         图片理解：多模态 content parts（deepseek-v4-flash-vision-exp）
   schema         JSON Schema：约束模型输出结构化数据
+  errors         错误处理：API 错误 vs 网络错误，状态码与详情
+  params         参数与用量：temperature 对比 + token 统计
+  responses-tool Responses API 版工具调用，与 Chat Completions 对照
 
 环境变量:
   DEEPSEEK_API_KEY  DeepSeek API Key（DeepSeek 示例必须）
