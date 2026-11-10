@@ -11,11 +11,11 @@ import (
 // ChatMultiTurn 多轮对话：让服务端帮你记上下文。
 //
 // 本示例学什么：
-// - Store: true 把 Response 存在服务端，拿到可引用的 ID
-// - PreviousResponseID 指定「接着哪一轮说」，第二轮只需传新问题，
-//   历史上下文由服务端拼接
-// - 注意：DeepSeek 不支持 store（响应中恒为 store: false），
-//   手动拼接上下文的方案见 deepseek.go
+//   - Store: true 把 Response 存在服务端，拿到可引用的 ID
+//   - PreviousResponseID 指定「接着哪一轮说」，第二轮只需传新问题，
+//     历史上下文由服务端拼接
+//   - 注意：DeepSeek 不支持 store（响应中恒为 store: false），
+//     手动拼接上下文的方案见 deepseek.go
 func (c *Client) ChatMultiTurn(ctx context.Context) error {
 	resp1, err := c.client.Responses.New(ctx, responses.ResponseNewParams{
 		Model: c.model,

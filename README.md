@@ -5,8 +5,9 @@ OpenAI Go SDK 学习示例集，通过 OpenAI 兼容端点接入 [DeepSeek](http
 ## 准备
 
 ```bash
-export DEEPSEEK_API_KEY=sk-xxx   # 必须
-export BAIDU_MAP_AK=xxx          # 仅 tool 子命令需要（百度地图开放平台申请）
+export DEEPSEEK_API_KEY=sk-xxx   # DeepSeek 示例必须
+export BAIDU_MAP_AK=xxx          # tool/tools 子命令需要（百度地图开放平台申请）
+export OPENAI_API_KEY=sk-xxx     # embeddings/vision/conversations 需要（官方端点）
 ```
 
 ## 示例清单
@@ -19,6 +20,10 @@ export BAIDU_MAP_AK=xxx          # 仅 tool 子命令需要（百度地图开放
 | `conversations` | `agent/conversations.go` | Conversations 会话管理 API（DeepSeek 不支持） |
 | `stream` | `agent/stream.go` | 流式响应，`stream.Next()` 增量消费 + `stream.Err()` |
 | `tool` | `agent/tool.go` | Tool Calling 闭环：模型决定调用 → 本地执行 → 结果回传 |
+| `tools` | `agent/tools.go` | 多工具注册表 + map 路由分发，模型并行调用多个工具 |
+| `reasoner` | `agent/reasoner.go` | deepseek-reasoner 思维链（ExtraFields 取非标字段）vs 普通模型 |
+| `embeddings` | `agent/embeddings.go` | 文本向量化 + 余弦相似度语义搜索（需官方 key） |
+| `vision` | `agent/vision.go` | TextContentPart + ImageContentPart 多模态输入（需官方 key） |
 | `schema` | `agent/schema.go` | JSON Schema 约束输出，结构体反射生成 schema |
 
 ## 运行

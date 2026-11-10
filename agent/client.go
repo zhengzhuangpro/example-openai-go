@@ -21,11 +21,11 @@ type Client struct {
 // NewClient 创建客户端。
 //
 // 学什么：
-// - option.WithAPIKey / WithBaseURL：OpenAI 兼容端点的标准接入方式，
-//   DeepSeek、Moonshot、vLLM 等服务都这样接
-// - option.WithHTTPClient：统一超时控制
-// - option.WithMaxRetries：SDK 内置的网络重试
-// - API Key 从环境变量 DEEPSEEK_API_KEY 读取，绝不硬编码进源码
+//   - option.WithAPIKey / WithBaseURL：OpenAI 兼容端点的标准接入方式，
+//     DeepSeek、Moonshot、vLLM 等服务都这样接
+//   - option.WithHTTPClient：统一超时控制
+//   - option.WithMaxRetries：SDK 内置的网络重试
+//   - API Key 从环境变量 DEEPSEEK_API_KEY 读取，绝不硬编码进源码
 //
 // 注意：context 按惯例不存进结构体，而是随每次调用传入（见各示例方法）。
 func NewClient() *Client {
@@ -38,5 +38,24 @@ func NewClient() *Client {
 	return &Client{
 		client: &client,
 		model:  openai.ChatModel("deepseek-chat"), // 非官方模型名：用字符串转换构造
+	}
+}
+
+// NewOfficialClient 创建 OpenAI 官方端点客户端。
+//
+// 学什么：
+//   - DeepSeek 等兼容端点只覆盖 Chat 等核心 API，
+//     Embeddings、Vision、Audio 等官方专属能力需要官方 key
+//   - 官方模型名 SDK 内置了常量（如 ChatModelGPT4oMini），
+//     不用像 DeepSeek 那样手写字符串
+//   - 一个程序里可以同时持有多个 Client，各连各的端点
+func NewOfficialClient() *Client {
+	client := openai.NewClient(
+		option.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
+		option.WithHTTPClient(&http.Client{Timeout: 60 * time.Second}),
+	)
+	return &Client{
+		client: &client,
+		model:  openai.ChatModelGPT4oMini,
 	}
 }
