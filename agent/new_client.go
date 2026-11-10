@@ -9,6 +9,7 @@ import (
 	"time"
 
 	getweater "github.com/example-openai-go/pkg/get_weater"
+	"github.com/invopop/jsonschema"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/conversations"
 	"github.com/openai/openai-go/v3/option"
@@ -192,6 +193,8 @@ func (c *NewClient) CreateChatCompletionToolRequest() (*responses.Response, erro
 
 	msg := resp.Choices[0].Message
 
+	fmt.Println("工具调用:", msg.ToolCalls[0].Function.Name)
+
 	// 本地调用工具
 	if len(msg.ToolCalls) > 0 {
 		toolCall := msg.ToolCalls[0]
@@ -204,8 +207,17 @@ func (c *NewClient) CreateChatCompletionToolRequest() (*responses.Response, erro
 
 		result := getweater.GetWeather(args.City, "celsius")
 
-		// 把模型
-		resp, err = c.client.Chat.Completions.New(c.ctx, openai.ChatCompletionNewParams{
+		// resp, err = c.client.Chat.Completions.New(c.ctx, openai.ChatCompletionNewParams{
+		// 	Model: c.model,
+		// 	Tools: tools,
+		// 	Messages: append(history,
+		// 		msg.ToParam(),
+		// 		openai.ToolMessage(result, toolCall.ID),
+		// 	),
+		// })
+
+		// 流式响应
+		stream := c.client.Chat.Completions.NewStreaming(c.ctx, openai.ChatCompletionNewParams{
 			Model: c.model,
 			Tools: tools,
 			Messages: append(history,
@@ -213,10 +225,91 @@ func (c *NewClient) CreateChatCompletionToolRequest() (*responses.Response, erro
 				openai.ToolMessage(result, toolCall.ID),
 			),
 		})
-		if err != nil {
-			return nil, err
+
+		for stream.Next() {
+			chunk := stream.Current()
+
+			if len(chunk.Choices) > 0 {
+				fmt.Print(chunk.Choices[0].Delta.Content)
+			}
 		}
+
+		// 打印
+		// fmt.Println(resp.Choices[0].Message.Content)
+
 	}
 
 	return nil, nil
+}
+
+type Origin struct {
+	YearBuilt    int64  `json:"year_of_construction"`
+	Organization string `json:"organization"`
+}
+
+type HistoricalComputer struct {
+	Origin Origin `json:"origin" jsonSchema_description:"电脑的产地信息"`
+	Model  string `json:"model" jsonSchema_description:"电脑的型号"`
+	Year   int64  `json:"year" jsonSchema_description:"电脑的出厂年份"`
+	Price  int64  `json:"price" jsonSchema_description:"电脑的出厂价格"`
+}
+
+func GenerateSchema[T any]() (map[string]any, error) {
+	reflector := jsonschema.Reflector{
+		AllowAdditionalProperties: false,
+		DoNotReference:            true,
+	}
+
+	var v T
+
+	data, err := json.Marshal(reflector.Reflect(v))
+	if err != nil {
+		return nil, err
+	}
+
+	var out map[string]any
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// JSON Schema 约束输出
+func (c *NewClient) CreateChatCompletionJSONSchemaRequest() (*responses.Response, error) {
+	schema, err := GenerateSchema[HistoricalComputer]()
+	if err != nil {
+		return nil, fmt.Errorf("生成 JSON Schema 失败: %w", err)
+	}
+
+	response, err := c.client.Responses.New(
+		c.ctx,
+		responses.ResponseNewParams{
+			Model: c.model,
+			Input: responses.ResponseNewParamsInputUnion{
+				OfString: openai.String("什么计算机运行了第一个神经网络？"),
+			},
+			Text: responses.ResponseTextConfigParam{
+				Format: responses.ResponseFormatTextConfigParamOfJSONSchema(
+					"historical_computer",
+					schema,
+				),
+			},
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("调用模型失败: %w", err)
+	}
+
+	var computer HistoricalComputer
+	if err := json.Unmarshal(
+		[]byte(response.OutputText()),
+		&computer,
+	); err != nil {
+		return nil, fmt.Errorf("解析模型输出失败: %w", err)
+	}
+
+	fmt.Printf("JSON Schema 结果: %+v\n", computer)
+
+	return response, nil
 }

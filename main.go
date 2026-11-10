@@ -53,9 +53,16 @@ func main() {
 	// fmt.Println(resp)
 
 	// Tool Calling
-	resp, err := client.CreateChatCompletionToolRequest()
+	// resp, err := client.CreateChatCompletionToolRequest()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(resp)
+
+	// JSON Schema
+	_, err := client.CreateChatCompletionJSONSchemaRequest()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(resp)
+	// fmt.Println(resp)
 }
