@@ -3,6 +3,7 @@ package getweater
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -24,31 +25,53 @@ func GetWeather(city, unit string) string {
 
 	fmt.Println("调用外部天气 API，获取城市：", city, "单位：", unit)
 
+	// 服务地址
+	host := "https://api.map.baidu.com"
+
+	// 接口地址
+	uri := "/weather/v1/"
+
+	ak := "ypKB9KYVzTazUmGZYnfbFcG61SmDzWaq"
+
+	// 设置请求参数
+	params := url.Values{
+		"province":  []string{"北京市"},
+		"city":      []string{"北京市"},
+		"district":  []string{"北京市"},
+		"data_type": []string{"all"},
+		"ak":        []string{ak},
+	}
+
 	// 1. 请求外部天气 API
-	apiURL := fmt.Sprintf(
-		"https://api.weather.example.com/v1/current?city=%s&unit=%s",
-		url.QueryEscape(city), unit,
-	)
-	resp, err := http.Get(apiURL)
+	request, _ := url.Parse(host + uri + "?" + params.Encode())
+	resp, err := http.Get(request.String())
 	if err != nil {
 		return toolError("请求天气服务失败: " + err.Error())
 	}
 	defer resp.Body.Close()
 
-	// 2. 解析 API 响应
-	var apiResp struct {
-		Temp      float64 `json:"temp"`
-		Condition string  `json:"condition"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return toolError("解析天气数据失败: " + err.Error())
+	body, err2 := ioutil.ReadAll(resp.Body)
+	if err2 != nil {
+		fmt.Printf("response error: %v", err2)
 	}
 
-	// 3. 序列化为 JSON 返回，模型解析更稳定
-	result, _ := json.Marshal(WeatherResult{
-		City: city, Temperature: apiResp.Temp, Unit: unit, Condition: apiResp.Condition,
-	})
-	return string(result)
+	// fmt.Println(string(body))
+	return string(body)
+
+	// // 2. 解析 API 响应
+	// var apiResp struct {
+	// 	Temp      float64 `json:"temp"`
+	// 	Condition string  `json:"condition"`
+	// }
+	// if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+	// 	return toolError("解析天气数据失败: " + err.Error())
+	// }
+
+	// // 3. 序列化为 JSON 返回，模型解析更稳定
+	// result, _ := json.Marshal(WeatherResult{
+	// 	City: city, Temperature: apiResp.Temp, Unit: unit, Condition: apiResp.Condition,
+	// })
+	// return string(result)
 }
 
 // toolError 错误不走 panic，包装成 JSON 返回，让模型自行处理（重试或告知用户）
